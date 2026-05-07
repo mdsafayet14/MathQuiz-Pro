@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MathQuiz Pro – Kids Edition</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<style>
+/* ════════════════════════════════════════════
+   THEME TOKENS
+════════════════════════════════════════════ */
+:root {
+  --bg:       #060610;
+  --surface:  #0f0f20;
+  --surface2: #171730;
+  --rim:      #2a2a50;
+  --ink:      #f0f0ff;
+  --ink2:     #9090c0;
+  --ink3:     #4a4a80;
+  --accent:   #f5c842;
+  --accent2:  #fde68a;
+  --teal:     #22d4b8;
+  --violet:   #8b5cf6;
+  --green:    #10e898;
+  --red:      #ff4f6e;
+  --btn-a: #f5c842; --btn-a-txt: #1a0a00;
+  --btn-b: #22d4b8; --btn-b-txt: #001a16;
+  --btn-c: #8b5cf6; --btn-c-txt: #ffffff;
+  --btn-d: #ff4f6e; --btn-d-txt: #ffffff;
+  --card-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  --font-h: 'Fredoka One', cursive;
+  --font-b: 'Nunito', sans-serif;
+}
+[data-theme="jungle"] {
+  --bg:       #0d1f0d;
+  --surface:  #132613;
+  --surface2: #1a331a;
+  --rim:      #2d4d2d;
+  --ink:      #e8ffe8;
+  --ink2:     #90c890;
+  --ink3:     #4a7a4a;
+  --accent:   #7dff5c;
+  --accent2:  #b8ffaa;
+  --teal:     #00e5b0;
+  --violet:   #c8f535;
+  --green:    #00ff88;
+  --red:      #ff6b35;
+  --btn-a: #7dff5c; --btn-a-txt: #0a1a00;
+  --btn-b: #00e5b0; --btn-b-txt: #001a10;
+  --btn-c: #c8f535; --btn-c-txt: #1a2000;
+  --btn-d: #ff6b35; --btn-d-txt: #ffffff;
+}
+[data-theme="candy"] {
+  --bg:       #fff0f8;
+  --surface:  #ffffff;
+  --surface2: #fce8f6;
+  --rim:      #f0b0e0;
+  --ink:      #3a0030;
+  --ink2:     #a050a0;
+  --ink3:     #d090c0;
+  --accent:   #ff3eb5;
+  --accent2:  #ff88d0;
+  --teal:     #00c8e0;
+  --violet:   #a855f7;
+  --green:    #22c55e;
+  --red:      #ef4444;
+  --btn-a: #ff3eb5; --btn-a-txt: #ffffff;
+  --btn-b: #00c8e0; --btn-b-txt: #ffffff;
+  --btn-c: #a855f7; --btn-c-txt: #ffffff;
+  --btn-d: #f97316; --btn-d-txt: #ffffff;
+  --card-shadow: 0 8px 32px rgba(255,62,181,0.2);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-b);
+  min-height: 100dvh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px 10px;
+  transition: background 0.4s, color 0.4s;
+}
+
+.wrapper { width: min(540px, 100%); position: relative; }
+
+.screen {
+  display: none;
+  background: var(--surface);
+  border: 2px solid var(--rim);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: var(--card-shadow, 0 8px 32px rgba(0,0,0,0.4));
+  transition: background 0.4s, border-color 0.4s;
+}
+.screen.active { display: block; animation: pop-in 0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes pop-in { from { opacity:0; transform:scale(0.88) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+
+.top-bar { height: 6px; background: linear-gradient(90deg, var(--accent), var(--teal), var(--violet)); }
+.screen-inner { padding: 28px 28px 36px; }
+@media (max-width: 420px) { .screen-inner { padding: 20px 16px 28px; } }
+
+/* THEME SWITCHER */
+.theme-bar {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 6px; margin-bottom: 20px;
+}
+.theme-btn {
+  width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent;
+  cursor: pointer; transition: transform 0.2s, border-color 0.2s;
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+}
+.theme-btn:hover { transform: scale(1.15); }
+.theme-btn.active { border-color: var(--ink); transform: scale(1.2); }
+.theme-btn.cyber  { background: #1a1a3a; }
+.theme-btn.jungle { background: #1a4a1a; }
+.theme-btn.candy  { background: linear-gradient(135deg,#ff3eb5,#a855f7); }
+
+/* BRAND */
+.brand { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.brand-icon {
+  width: 56px; height: 56px; border-radius: 18px;
+  background: var(--surface2); border: 2px solid var(--rim);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.brand-name { font-family: var(--font-h); font-size: 26px; letter-spacing: 1px; color: var(--accent); line-height: 1; }
+.brand-tag { font-size: 12px; font-weight: 800; margin-top: 3px; letter-spacing: 0.5px; background: linear-gradient(90deg, var(--teal), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.brand-creator { font-size: 10px; font-weight: 700; margin-top: 3px; letter-spacing: 0.3px; background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+/* WELCOME HEADING */
+.welcome-heading { font-family: var(--font-h); font-size: clamp(36px, 8vw, 52px); line-height: 1.0; margin-bottom: 8px; color: var(--ink); }
+.welcome-heading .hi { color: var(--accent); }
+.welcome-sub { font-size: 14px; color: var(--ink2); line-height: 1.6; margin-bottom: 24px; font-weight: 600; }
+
+/* SETTINGS CARD */
+.settings-card { background: var(--surface2); border: 2px solid var(--rim); border-radius: 20px; overflow: hidden; margin-bottom: 20px; }
+.setting-row { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--rim); }
+.setting-row:last-child { border-bottom: none; }
+.setting-icon { font-size: 22px; width: 36px; text-align: center; flex-shrink: 0; }
+.setting-meta { flex: 0 0 88px; }
+.setting-label { font-size: 12px; font-weight: 800; color: var(--ink); display: block; }
+.setting-desc  { font-size: 10px; color: var(--ink3); font-weight: 600; }
+.setting-opts  { display: flex; gap: 5px; flex-wrap: wrap; flex: 1; justify-content: flex-end; }
+.setting-row.diff-row { flex-wrap: wrap; }
+.setting-row.diff-row .setting-opts { flex-basis: 100%; justify-content: flex-start; margin-top: 6px; }
+
+.chip { background: var(--surface); border: 2px solid var(--rim); border-radius: 10px; padding: 5px 10px; font-family: var(--font-b); font-size: 11px; font-weight: 800; color: var(--ink3); cursor: pointer; transition: all 0.18s; outline: none; white-space: nowrap; }
+.chip:hover { border-color: var(--accent); color: var(--ink); transform: translateY(-1px); }
+.chip.sel { background: var(--accent); border-color: var(--accent); color: #000; }
+.diff-chip { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 12px; font-size: 12px; }
+.diff-chip.sel { color: #000; }
+
+/* MODE TOGGLE */
+.mode-toggle-row {
+  display: flex; gap: 6px; margin-bottom: 16px;
+}
+.mode-tab {
+  flex: 1; padding: 10px 8px; border-radius: 12px;
+  border: 2px solid var(--rim); background: var(--surface2);
+  color: var(--ink3); font-family: var(--font-b); font-size: 12px;
+  font-weight: 800; cursor: pointer; transition: all 0.2s;
+  text-align: center; line-height: 1.3;
+}
+.mode-tab:hover { border-color: var(--accent); color: var(--ink); }
+.mode-tab.active { background: var(--accent); border-color: var(--accent); color: #000; }
+.mode-tab .tab-icon { display: block; font-size: 18px; margin-bottom: 3px; }
+
+/* LEVEL JOURNEY SECTION */
+.level-section { display: none; }
+.level-section.visible { display: block; animation: fade-in 0.3s ease both; }
+@keyframes fade-in { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+.level-card {
+  background: var(--surface2); border: 2px solid var(--rim);
+  border-radius: 20px; padding: 20px 18px; margin-bottom: 12px;
+}
+
+.level-display {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.level-num-big {
+  font-family: var(--font-h); font-size: 52px; color: var(--accent);
+  line-height: 1; text-shadow: 0 0 30px rgba(245,200,66,0.3);
+}
+.level-badge-info { text-align: right; }
+.level-zone-label {
+  font-size: 11px; font-weight: 800; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--ink3); margin-bottom: 4px;
+}
+.level-zone-name {
+  font-family: var(--font-h); font-size: 16px; color: var(--teal);
+}
+.level-zone-emoji { font-size: 24px; display: block; }
+
+/* Range Slider */
+.slider-wrap { position: relative; padding: 4px 0 20px; }
+.level-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 10px; border-radius: 6px;
+  background: var(--rim); outline: none; cursor: pointer;
+  transition: background 0.3s;
+}
+.level-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); cursor: pointer;
+  border: 3px solid var(--surface);
+  box-shadow: 0 0 0 3px var(--accent), 0 4px 12px rgba(0,0,0,0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.level-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.level-slider::-moz-range-thumb {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); cursor: pointer;
+  border: 3px solid var(--surface);
+  box-shadow: 0 0 0 3px var(--accent), 0 4px 12px rgba(0,0,0,0.4);
+}
+.slider-track-fill {
+  position: absolute; top: 4px; left: 0; height: 10px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--teal), var(--accent));
+  pointer-events: none; transition: width 0.2s;
+}
+
+/* Zone Milestones */
+.zone-milestones {
+  display: flex; justify-content: space-between;
+  margin-top: 4px;
+}
+.milestone {
+  font-size: 9px; font-weight: 800; color: var(--ink3);
+  text-align: center; letter-spacing: 0.5px;
+}
+.milestone span { display: block; font-size: 13px; }
+
+/* Level Preview */
+.level-preview {
+  background: var(--surface); border: 1px solid var(--rim);
+  border-radius: 12px; padding: 10px 14px;
+  font-size: 12px; font-weight: 700; color: var(--ink2);
+  display: flex; align-items: center; gap: 8px;
+}
+.preview-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); flex-shrink: 0; }
+
+/* Classic section */
+.classic-section { display: none; }
+.classic-section.visible { display: block; animation: fade-in 0.3s ease both; }
+
+/* Summary pills */
+.summary-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.s-pill { display: flex; align-items: center; gap: 5px; background: var(--surface2); border: 2px solid var(--rim); border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 700; color: var(--ink2); }
+.s-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+/* BUTTONS */
+.btn { width: 100%; padding: 16px 20px; border: none; border-radius: 16px; font-family: var(--font-h); font-size: 20px; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; outline: none; }
+.btn-primary { background: var(--accent); color: #000; box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
+.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 0 rgba(0,0,0,0.3); }
+.btn-primary:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
+.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-ghost { background: transparent; color: var(--ink2); border: 2px solid var(--rim); font-family: var(--font-b); font-size: 14px; font-weight: 700; margin-top: 10px; }
+.btn-ghost:hover { border-color: var(--accent); color: var(--ink); }
+.btn-next-level {
+  background: linear-gradient(135deg, var(--teal), var(--accent));
+  color: #000; box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+  font-family: var(--font-h); font-size: 20px; letter-spacing: 1px;
+  width: 100%; padding: 16px 20px; border: none; border-radius: 16px;
+  cursor: pointer; transition: all 0.2s;
+  animation: glow-pulse 1.5s ease-in-out infinite;
+  margin-top: 0;
+}
+.btn-next-level:hover { transform: translateY(-2px); box-shadow: 0 6px 0 rgba(0,0,0,0.3); }
+@keyframes glow-pulse { 0%,100%{box-shadow:0 4px 0 rgba(0,0,0,0.3),0 0 0 rgba(34,212,184,0)} 50%{box-shadow:0 4px 0 rgba(0,0,0,0.3),0 0 20px rgba(34,212,184,0.4)} }
+
+/* QUIZ TOPBAR */
+.quiz-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 10px; }
+.q-label { font-family: var(--font-h); font-size: 16px; color: var(--ink2); }
+.q-label b { color: var(--accent); }
+.lives { display: flex; gap: 3px; font-size: 20px; }
+.live-badge { display: flex; align-items: center; gap: 6px; background: var(--surface2); border: 2px solid var(--rim); border-radius: 20px; padding: 4px 12px; font-family: var(--font-b); font-size: 13px; font-weight: 800; color: var(--ink); }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse-dot 1.4s ease-in-out infinite; }
+@keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.6)} }
+
+/* Level indicator in quiz */
+.level-indicator {
+  display: none; align-items: center; gap: 6px;
+  background: var(--surface2); border: 2px solid var(--teal);
+  border-radius: 20px; padding: 4px 12px;
+  font-family: var(--font-b); font-size: 12px; font-weight: 800;
+  color: var(--teal); margin-bottom: 8px;
+}
+.level-indicator.visible { display: flex; }
+.level-indicator-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); animation: pulse-dot 1.4s ease-in-out infinite; }
+
+/* PROGRESS BAR WITH ROCKET */
+.progress-wrap { position: relative; margin: 0 0 20px; }
+.progress-track { height: 14px; background: var(--surface2); border-radius: 10px; overflow: visible; border: 2px solid var(--rim); position: relative; }
+.progress-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--accent), var(--teal)); transition: width 0.7s cubic-bezier(0.34,1.56,0.64,1); }
+.rocket { position: absolute; top: 50%; font-size: 22px; transform: translateY(-50%); transition: left 0.7s cubic-bezier(0.34,1.56,0.64,1); filter: drop-shadow(0 0 6px var(--accent)); pointer-events: none; line-height: 1; }
+.combo-badge { position: absolute; right: 0; top: -28px; background: var(--accent); color: #000; font-family: var(--font-h); font-size: 13px; padding: 3px 10px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); animation: combo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1); display: none; }
+.combo-badge.show { display: block; }
+@keyframes combo-pop { from{transform:scale(0)} to{transform:scale(1)} }
+
+/* AVATAR */
+.avatar-row { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 14px; }
+.avatar { font-size: 44px; line-height: 1; flex-shrink: 0; animation: avatar-idle 3s ease-in-out infinite; }
+@keyframes avatar-idle { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+.avatar.bounce { animation: avatar-bounce 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes avatar-bounce { 0%{transform:scale(1)} 40%{transform:scale(1.35)} 100%{transform:scale(1)} }
+.avatar.shake { animation: avatar-shake 0.4s ease; }
+@keyframes avatar-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+.speech-bubble { background: var(--surface2); border: 2px solid var(--rim); border-radius: 16px 16px 16px 4px; padding: 8px 14px; font-size: 13px; font-weight: 800; color: var(--ink); max-width: 200px; line-height: 1.4; opacity: 0; transform: scale(0.8); transition: opacity 0.25s, transform 0.25s; pointer-events: none; }
+.speech-bubble.show { opacity: 1; transform: scale(1); }
+
+/* QUESTION CARD */
+.q-card { background: var(--surface2); border: 2px solid var(--rim); border-radius: 20px; padding: 28px 20px 20px; margin-bottom: 16px; text-align: center; position: relative; }
+.q-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--ink3); margin-bottom: 10px; }
+.q-text { font-family: var(--font-h); font-size: clamp(52px, 13vw, 72px); color: var(--ink); line-height: 1; margin-bottom: 16px; cursor: pointer; transition: text-shadow 0.2s; user-select: none; }
+.q-text.speaking { text-shadow: 0 0 30px var(--teal); }
+.q-speak-hint { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink3); margin-bottom: 12px; }
+.q-speak-hint.speaking { color: var(--teal); }
+
+/* Timer */
+.timer-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.timer-row.hidden { display: none; }
+.timer-track { flex: 1; max-width: 200px; height: 8px; background: var(--rim); border-radius: 6px; overflow: hidden; }
+.timer-fill { height: 100%; border-radius: 6px; background: var(--teal); transition: width 1s linear, background 0.3s; }
+.timer-fill.warn   { background: var(--accent); }
+.timer-fill.danger { background: var(--red); }
+.timer-num { font-family: var(--font-h); font-size: 16px; color: var(--ink3); min-width: 28px; text-align: center; }
+.timer-num.warn   { color: var(--accent); }
+.timer-num.danger { color: var(--red); }
+
+/* Feedback */
+.feedback { border-radius: 12px; padding: 10px 14px; font-size: 13px; font-weight: 800; display: none; align-items: center; gap: 8px; margin-bottom: 12px; border: 2px solid transparent; }
+.feedback.show { display: flex; animation: fb-in 0.2s ease both; }
+@keyframes fb-in { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+.feedback.ok  { background: rgba(16,232,152,0.12); border-color: rgba(16,232,152,0.3); color: #6ee7b7; }
+.feedback.err { background: rgba(255,79,110,0.12); border-color: rgba(255,79,110,0.3); color: #fca5a5; }
+
+/* MCQ BUTTONS */
+.mcq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.mcq-btn { padding: 16px 10px; border: 3px solid transparent; border-radius: 16px; font-family: var(--font-h); font-size: 22px; cursor: pointer; transition: all 0.18s cubic-bezier(0.34,1.56,0.64,1); display: flex; align-items: center; justify-content: center; gap: 6px; position: relative; overflow: hidden; box-shadow: 0 4px 0 rgba(0,0,0,0.25); }
+.mcq-btn::before { content: attr(data-label); font-size: 11px; font-family: var(--font-b); font-weight: 800; opacity: 0.7; position: absolute; top: 6px; left: 10px; }
+.mcq-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 7px 0 rgba(0,0,0,0.25); }
+.mcq-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+.mcq-btn:disabled { cursor: not-allowed; opacity: 0.7; transform: none !important; }
+.mcq-btn.opt-a { background: var(--btn-a); color: var(--btn-a-txt); }
+.mcq-btn.opt-b { background: var(--btn-b); color: var(--btn-b-txt); }
+.mcq-btn.opt-c { background: var(--btn-c); color: var(--btn-c-txt); }
+.mcq-btn.opt-d { background: var(--btn-d); color: var(--btn-d-txt); }
+.mcq-btn.correct { animation: flash-correct 0.5s ease; border-color: #fff; }
+.mcq-btn.wrong   { animation: flash-wrong 0.5s ease; opacity: 0.5; }
+@keyframes flash-correct { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.5)} }
+@keyframes flash-wrong   { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+/* RESULTS */
+.result-hero { background: var(--surface2); border: 2px solid var(--rim); border-radius: 20px; padding: 28px 20px 24px; text-align: center; margin-bottom: 16px; }
+.result-badge { font-size: 56px; display: block; margin-bottom: 10px; animation: badge-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both; }
+@keyframes badge-pop { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+.result-score { font-family: var(--font-h); font-size: 80px; color: var(--accent); line-height: 1; }
+.result-denom { font-size: 13px; font-weight: 700; color: var(--ink3); margin: 6px 0 10px; }
+.result-verdict { font-size: 15px; font-weight: 800; color: var(--ink2); }
+
+/* Level complete banner */
+.level-complete-banner {
+  display: none; background: linear-gradient(135deg, rgba(34,212,184,0.15), rgba(245,200,66,0.15));
+  border: 2px solid var(--teal); border-radius: 16px;
+  padding: 14px 16px; margin-bottom: 14px; text-align: center;
+}
+.level-complete-banner.visible { display: block; animation: fade-in 0.4s ease 0.3s both; }
+.lcb-title { font-family: var(--font-h); font-size: 18px; color: var(--teal); }
+.lcb-sub { font-size: 12px; font-weight: 700; color: var(--ink2); margin-top: 4px; }
+
+.stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 16px; }
+.stat-card { background: var(--surface2); border: 2px solid var(--rim); border-radius: 14px; padding: 14px 8px; text-align: center; }
+.stat-val { display: block; font-family: var(--font-h); font-size: 26px; color: var(--ink); margin-bottom: 3px; }
+.stat-key { font-size: 9px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink3); }
+.section-head { font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--ink3); margin-bottom: 8px; }
+.history-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; max-height: 220px; overflow-y: auto; }
+.h-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--surface2); border: 2px solid var(--rim); border-radius: 10px; border-left-width: 3px; padding: 8px 12px; font-size: 12px; }
+.h-item.h-ok  { border-left-color: var(--green); }
+.h-item.h-err { border-left-color: var(--red); }
+.h-left { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; }
+.h-num  { font-family: var(--font-h); font-size: 12px; color: var(--ink3); flex-shrink: 0; }
+.h-expr { font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.h-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.h-time  { font-size: 11px; color: var(--ink3); font-weight: 600; }
+.speed-chip { font-size: 9px; font-weight: 800; background: rgba(245,200,66,0.15); border: 1px solid var(--accent); color: var(--accent); border-radius: 5px; padding: 1px 6px; }
+.h-wrong { color: var(--red); font-weight: 700; }
+.h-real  { color: var(--ink3); font-size: 10px; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--rim); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- ══════ WELCOME ══════ -->
+  <div class="screen active" id="screen-welcome">
+    <div class="top-bar"></div>
+    <div class="screen-inner">
+
+      <div class="theme-bar">
+        <button class="theme-btn cyber active" data-theme="cyber"   onclick="setTheme('cyber')"  title="Cyber">🌌</button>
+        <button class="theme-btn jungle"       data-theme="jungle"  onclick="setTheme('jungle')" title="Jungle">🌿</button>
+        <button class="theme-btn candy"        data-theme="candy"   onclick="setTheme('candy')"  title="Candy">🍭</button>
+      </div>
+
+      <div class="brand">
+        <div class="brand-icon">🧮</div>
+        <div>
+          <div class="brand-name">MathQuiz Pro</div>
+          <div class="brand-tag">Kids Edition ✨</div>
+          <div class="brand-creator">Created by MD Safayet Reza</div>
+        </div>
+      </div>
+
+      <div class="welcome-heading"><span class="hi">Hey!</span><br>Let's Play!</div>
+      <p class="welcome-sub">Pick your settings, then show off your math skills! 🎉</p>
+
+      <!-- Mode Toggle -->
+      <div class="mode-toggle-row">
+        <button class="mode-tab active" id="tab-classic" onclick="switchMode('classic')">
+          <span class="tab-icon">🎮</span>Classic Mode
+        </button>
+        <button class="mode-tab" id="tab-journey" onclick="switchMode('journey')">
+          <span class="tab-icon">🗺️</span>Level Journey
+        </button>
+      </div>
+
+      <!-- ══ CLASSIC MODE ══ -->
+      <div class="classic-section visible" id="classic-section">
+        <div class="summary-pills">
+          <div class="s-pill"><div class="s-dot" style="background:var(--accent)"></div><span id="qcount-pill">10 Questions</span></div>
+          <div class="s-pill"><div class="s-dot" style="background:var(--teal)"></div><span id="timer-pill">20s Timer</span></div>
+          <div class="s-pill"><div class="s-dot" style="background:var(--violet)"></div><span id="speed-pill">Speed ×2</span></div>
+          <div class="s-pill"><div class="s-dot" style="background:var(--red)"></div><span id="diff-pill">Pick level</span></div>
+        </div>
+
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="setting-icon">🔢</div>
+            <div class="setting-meta"><span class="setting-label">Questions</span><span class="setting-desc">Per game</span></div>
+            <div class="setting-opts">
+              <button class="chip" data-count="5"  onclick="selectQCount(this)">5</button>
+              <button class="chip sel" data-count="10" onclick="selectQCount(this)">10</button>
+              <button class="chip" data-count="15" onclick="selectQCount(this)">15</button>
+              <button class="chip" data-count="20" onclick="selectQCount(this)">20</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-icon">⏱️</div>
+            <div class="setting-meta"><span class="setting-label">Timer</span><span class="setting-desc">Per question</span></div>
+            <div class="setting-opts">
+              <button class="chip" data-secs="5"  onclick="selectTimer(this)">5s</button>
+              <button class="chip" data-secs="10" onclick="selectTimer(this)">10s</button>
+              <button class="chip sel" data-secs="20" onclick="selectTimer(this)">20s</button>
+              <button class="chip" data-secs="30" onclick="selectTimer(this)">30s</button>
+              <button class="chip" data-secs="0"  onclick="selectTimer(this)">Off</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-icon">⚡</div>
+            <div class="setting-meta"><span class="setting-label">Speed Bonus</span><span class="setting-desc">Fast = more pts</span></div>
+            <div class="setting-opts">
+              <button class="chip" data-mult="0"   onclick="selectSpeed(this)">Off</button>
+              <button class="chip" data-mult="1.5" onclick="selectSpeed(this)">×1.5</button>
+              <button class="chip sel" data-mult="2" onclick="selectSpeed(this)">×2</button>
+              <button class="chip" data-mult="3"   onclick="selectSpeed(this)">×3</button>
+            </div>
+          </div>
+          <div class="setting-row diff-row">
+            <div class="setting-icon">🎯</div>
+            <div class="setting-meta"><span class="setting-label">Level</span><span class="setting-desc">Pick one</span></div>
+            <div class="setting-opts">
+              <button class="chip diff-chip" data-diff="very easy" onclick="selectDiff(this)">🌱 Very Easy</button>
+              <button class="chip diff-chip" data-diff="easy"      onclick="selectDiff(this)">😊 Easy</button>
+              <button class="chip diff-chip" data-diff="medium"    onclick="selectDiff(this)">🔥 Medium</button>
+              <button class="chip diff-chip" data-diff="hard"      onclick="selectDiff(this)">⚡ Hard</button>
+              <button class="chip diff-chip" data-diff="very hard" onclick="selectDiff(this)">💀 Very Hard</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="start-btn" onclick="startGame()" disabled>LET'S GO! 🚀</button>
+      </div>
+
+      <!-- ══ LEVEL JOURNEY MODE ══ -->
+      <div class="level-section" id="journey-section">
+        <div class="level-card">
+          <div class="level-display">
+            <div>
+              <div style="font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--ink3);margin-bottom:4px;">CURRENT LEVEL</div>
+              <div class="level-num-big" id="lj-level-display">1</div>
+            </div>
+            <div class="level-badge-info">
+              <div class="level-zone-label" id="lj-zone-label">ZONE 1</div>
+              <div class="level-zone-name" id="lj-zone-name">Starter</div>
+              <span class="level-zone-emoji" id="lj-zone-emoji">🌱</span>
+            </div>
+          </div>
+
+          <div class="slider-wrap">
+            <div class="slider-track-fill" id="slider-fill-bg" style="width:0%"></div>
+            <input type="range" class="level-slider" id="level-slider"
+              min="1" max="200" value="1"
+              oninput="onLevelSlider(this.value)">
+          </div>
+
+          <div class="zone-milestones">
+            <div class="milestone"><span>🌱</span>Lv 1</div>
+            <div class="milestone"><span>📐</span>Lv 41</div>
+            <div class="milestone"><span>🔬</span>Lv 91</div>
+            <div class="milestone"><span>💎</span>Lv 151</div>
+            <div class="milestone"><span>🏆</span>200</div>
+          </div>
+        </div>
+
+        <div class="level-preview" id="lj-preview">
+          <div class="preview-dot"></div>
+          <span id="lj-preview-text">Levels 1–40: Addition &amp; Subtraction up to 20</span>
+        </div>
+
+        <!-- Timer for journey mode -->
+        <div class="settings-card" style="margin-top:12px;">
+          <div class="setting-row">
+            <div class="setting-icon">⏱️</div>
+            <div class="setting-meta"><span class="setting-label">Timer</span><span class="setting-desc">Per question</span></div>
+            <div class="setting-opts">
+              <button class="chip" data-jsecs="5"  onclick="selectJTimer(this)">5s</button>
+              <button class="chip" data-jsecs="10" onclick="selectJTimer(this)">10s</button>
+              <button class="chip sel" data-jsecs="20" onclick="selectJTimer(this)">20s</button>
+              <button class="chip" data-jsecs="30" onclick="selectJTimer(this)">30s</button>
+              <button class="chip" data-jsecs="0"  onclick="selectJTimer(this)">Off</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-icon">🔢</div>
+            <div class="setting-meta"><span class="setting-label">Questions</span><span class="setting-desc">Per level</span></div>
+            <div class="setting-opts">
+              <button class="chip sel" data-jcount="5"  onclick="selectJCount(this)">5</button>
+              <button class="chip" data-jcount="10" onclick="selectJCount(this)">10</button>
+              <button class="chip" data-jcount="15" onclick="selectJCount(this)">15</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="journey-start-btn" onclick="startJourneyGame()" style="margin-top:16px">START LEVEL 1 🗺️</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════ QUIZ ══════ -->
+  <div class="screen" id="screen-quiz">
+    <div class="top-bar"></div>
+    <div class="screen-inner">
+
+      <div class="level-indicator" id="level-indicator">
+        <div class="level-indicator-dot"></div>
+        <span id="level-indicator-text">Level 1 • Starter Zone 🌱</span>
+      </div>
+
+      <div class="quiz-topbar">
+        <div class="q-label">Q <b id="q-num">1</b> / <span id="q-total">10</span></div>
+        <div class="lives" id="lives-display">❤️❤️❤️</div>
+        <div class="live-badge"><div class="live-dot"></div><span id="live-score-val">0 pts</span></div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="combo-badge" id="combo-badge">🔥 Combo!</div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <div class="rocket" id="rocket" style="left:0%">🚀</div>
+      </div>
+
+      <div class="avatar-row">
+        <div class="avatar" id="avatar">🤖</div>
+        <div class="speech-bubble" id="speech-bubble">Let's go!</div>
+      </div>
+
+      <div class="q-card">
+        <div class="q-eyebrow">What is…</div>
+        <div class="q-text" id="q-text" onclick="speakQuestion()" title="Tap to hear">—</div>
+        <div class="q-speak-hint" id="q-speak-hint">🔊 tap to hear</div>
+        <div class="timer-row" id="timer-row">
+          <div class="timer-track"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+          <div class="timer-num" id="timer-num">20</div>
+        </div>
+      </div>
+
+      <div class="feedback" id="feedback" role="status">
+        <span id="fb-icon"></span><span id="fb-text"></span>
+      </div>
+
+      <div class="mcq-grid" id="mcq-grid">
+        <button class="mcq-btn opt-a" id="opt-a" data-label="A" onclick="selectOption(this)"></button>
+        <button class="mcq-btn opt-b" id="opt-b" data-label="B" onclick="selectOption(this)"></button>
+        <button class="mcq-btn opt-c" id="opt-c" data-label="C" onclick="selectOption(this)"></button>
+        <button class="mcq-btn opt-d" id="opt-d" data-label="D" onclick="selectOption(this)"></button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════ RESULTS ══════ -->
+  <div class="screen" id="screen-results">
+    <div class="top-bar"></div>
+    <div class="screen-inner">
+
+      <div class="theme-bar">
+        <button class="theme-btn cyber" data-theme="cyber"  onclick="setTheme('cyber')"  title="Cyber">🌌</button>
+        <button class="theme-btn jungle" data-theme="jungle" onclick="setTheme('jungle')" title="Jungle">🌿</button>
+        <button class="theme-btn candy"  data-theme="candy"  onclick="setTheme('candy')"  title="Candy">🍭</button>
+      </div>
+
+      <div class="brand" style="margin-bottom:16px">
+        <div class="brand-icon">🏆</div>
+        <div><div class="brand-name">Results!</div><div class="brand-tag">Quiz Complete</div></div>
+      </div>
+
+      <div class="result-hero">
+        <span class="result-badge" id="result-badge">🎉</span>
+        <div class="result-score"  id="result-score">0</div>
+        <div class="result-denom"  id="result-denom">out of 20 points</div>
+        <div class="result-verdict" id="result-verdict">—</div>
+      </div>
+
+      <!-- Level Journey complete banner -->
+      <div class="level-complete-banner" id="level-complete-banner">
+        <div class="lcb-title" id="lcb-title">🎉 Level Passed!</div>
+        <div class="lcb-sub" id="lcb-sub">You're ready for the next challenge!</div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card"><span class="stat-val" id="stat-correct">0/10</span><div class="stat-key">Correct</div></div>
+        <div class="stat-card"><span class="stat-val" id="stat-time">0s</span><div class="stat-key">Total Time</div></div>
+        <div class="stat-card"><span class="stat-val" id="stat-avg">0s</span><div class="stat-key">Avg / Q</div></div>
+      </div>
+
+      <div class="section-head">Question Breakdown</div>
+      <div class="history-list" id="history-list"></div>
+
+      <!-- Journey mode: Next Level button (shown only if passed) -->
+      <button class="btn-next-level" id="next-level-btn" onclick="goNextLevel()" style="display:none; margin-bottom:10px">
+        NEXT LEVEL ➡️ 🗺️
+      </button>
+
+      <button class="btn btn-primary" onclick="playAgain()">PLAY AGAIN 🎮</button>
+      <button class="btn btn-ghost"   onclick="changeDiff()">Change Settings</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ════════════════════════════════════════════
+   SOUND
+════════════════════════════════════════════ */
+const sounds = {
+  correct: new Audio('correct.mp3'),
+  wrong:   new Audio('wrong.mp3'),
+  click:   new Audio('click.mp3'),
+};
+function playSound(name) {
+  try { const s = sounds[name]; if (!s) return; s.currentTime = 0; s.play().catch(() => {}); } catch(e) {}
+}
+
+/* ════════════════════════════════════════════
+   THEME
+════════════════════════════════════════════ */
+let currentTheme = 'cyber';
+function setTheme(t) {
+  currentTheme = t;
+  document.documentElement.setAttribute('data-theme', t);
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === t));
+  playSound('click');
+}
+
+/* ════════════════════════════════════════════
+   MODE
+════════════════════════════════════════════ */
+let gameMode = 'classic'; // 'classic' | 'journey'
+
+function switchMode(mode) {
+  gameMode = mode;
+  document.getElementById('tab-classic').classList.toggle('active', mode === 'classic');
+  document.getElementById('tab-journey').classList.toggle('active', mode === 'journey');
+  document.getElementById('classic-section').classList.toggle('visible', mode === 'classic');
+  document.getElementById('journey-section').classList.toggle('visible', mode === 'journey');
+  playSound('click');
+}
+
+/* ════════════════════════════════════════════
+   LEVEL JOURNEY LOGIC
+════════════════════════════════════════════ */
+const ZONES = [
+  { min:1,   max:40,  name:'Starter',    emoji:'🌱', label:'ZONE 1', desc:'Levels 1–40: Addition & Subtraction up to 20' },
+  { min:41,  max:90,  name:'Challenger', emoji:'📐', label:'ZONE 2', desc:'Levels 41–90: Multiplication tables & bigger numbers' },
+  { min:91,  max:150, name:'Explorer',   emoji:'🔬', label:'ZONE 3', desc:'Levels 91–150: Division and mixed operations' },
+  { min:151, max:200, name:'Master',     emoji:'💎', label:'ZONE 4', desc:'Levels 151–200: Complex 3-digit mental math' },
+];
+
+let journeyLevel    = 1;
+let journeyTimer    = 20;
+let journeyQCount   = 5;
+let isJourneyMode   = false;
+const PASS_RATIO    = 0.6; // 60% correct to pass
+
+function getZone(lv) {
+  return ZONES.find(z => lv >= z.min && lv <= z.max) || ZONES[3];
+}
+
+function onLevelSlider(val) {
+  journeyLevel = parseInt(val);
+  updateLevelUI();
+}
+
+function updateLevelUI() {
+  const lv   = journeyLevel;
+  const zone = getZone(lv);
+  const pct  = ((lv - 1) / 199) * 100;
+
+  document.getElementById('lj-level-display').textContent = lv;
+  document.getElementById('lj-zone-label').textContent    = zone.label;
+  document.getElementById('lj-zone-name').textContent     = zone.name;
+  document.getElementById('lj-zone-emoji').textContent    = zone.emoji;
+  document.getElementById('lj-preview-text').innerHTML    = zone.desc;
+  document.getElementById('slider-fill-bg').style.width   = pct + '%';
+  document.getElementById('level-slider').value           = lv;
+  document.getElementById('journey-start-btn').textContent = `START LEVEL ${lv} ${zone.emoji}`;
+}
+
+function selectJTimer(el) {
+  document.querySelectorAll('[data-jsecs]').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  journeyTimer = parseInt(el.dataset.jsecs);
+  playSound('click');
+}
+
+function selectJCount(el) {
+  document.querySelectorAll('[data-jcount]').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  journeyQCount = parseInt(el.dataset.jcount);
+  playSound('click');
+}
+
+/* Generate question based on level 1-200 */
+function makeQuestionByLevel(lv) {
+  const r = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+
+  // Zone 1: Levels 1-40 — Addition/Subtraction 1-20
+  if (lv <= 40) {
+    // Scale difficulty within zone: early levels simpler
+    const maxN = Math.min(20, Math.max(5, Math.round(lv * 0.4 + 4)));
+    const op   = lv <= 20 ? '+' : (Math.random() < 0.5 ? '+' : '-');
+    let n1 = r(1, maxN), n2 = r(1, maxN);
+    if (op === '-' && n2 > n1) [n1, n2] = [n2, n1];
+    const ans = op === '+' ? n1 + n2 : n1 - n2;
+    return { expr: `${n1} ${op} ${n2}`, answer: ans };
+  }
+
+  // Zone 2: Levels 41-90 — Multiplication tables (2-20) + bigger add/sub
+  if (lv <= 90) {
+    const progress = (lv - 41) / 49; // 0 to 1
+    const ops = progress < 0.3
+      ? ['+', '-', '*']
+      : ['+', '-', '*', '+', '*']; // weight towards multiplication
+    const op = ops[r(0, ops.length - 1)];
+    const maxTable = Math.min(20, Math.round(2 + progress * 18));
+    const maxBig   = Math.min(100, Math.round(20 + progress * 80));
+
+    if (op === '*') {
+      const n1 = r(2, maxTable); const n2 = r(2, maxTable);
+      return { expr: `${n1} × ${n2}`, answer: n1 * n2 };
+    } else if (op === '-') {
+      let n1 = r(10, maxBig), n2 = r(1, n1);
+      return { expr: `${n1} ${op} ${n2}`, answer: n1 - n2 };
+    } else {
+      let n1 = r(10, maxBig), n2 = r(1, maxBig);
+      return { expr: `${n1} + ${n2}`, answer: n1 + n2 };
+    }
+  }
+
+  // Zone 3: Levels 91-150 — Division + mixed ops
+  if (lv <= 150) {
+    const progress = (lv - 91) / 59;
+    const ops = ['+', '-', '*', '/', '/', '*']; // weight division + multiply
+    const op  = ops[r(0, ops.length - 1)];
+    const maxN1 = Math.round(50 + progress * 100);
+    const maxN2 = Math.round(10 + progress * 15);
+
+    if (op === '/') {
+      const divisor = r(2, Math.min(15, maxN2));
+      const quotient = r(2, 20);
+      const dividend = divisor * quotient;
+      return { expr: `${dividend} ÷ ${divisor}`, answer: quotient };
+    } else if (op === '*') {
+      const n1 = r(5, maxN2), n2 = r(5, maxN2);
+      return { expr: `${n1} × ${n2}`, answer: n1 * n2 };
+    } else if (op === '-') {
+      let n1 = r(20, maxN1), n2 = r(1, n1);
+      return { expr: `${n1} - ${n2}`, answer: n1 - n2 };
+    } else {
+      const n1 = r(20, maxN1), n2 = r(10, maxN1);
+      return { expr: `${n1} + ${n2}`, answer: n1 + n2 };
+    }
+  }
+
+  // Zone 4: Levels 151-200 — Complex 3-digit + 15×15 style
+  const progress = (lv - 151) / 49;
+  const ops = ['+', '-', '*', '/', '*', '*'];
+  const op  = ops[r(0, ops.length - 1)];
+  const max3 = Math.round(100 + progress * 800);
+
+  if (op === '*') {
+    // Up to 15×15 for lower 151, up to 25×25 at 200
+    const maxM = Math.round(10 + progress * 15);
+    const n1 = r(10, maxM), n2 = r(10, maxM);
+    return { expr: `${n1} × ${n2}`, answer: n1 * n2 };
+  } else if (op === '/') {
+    const divisor  = r(5, 25);
+    const quotient = r(10, 50);
+    return { expr: `${divisor * quotient} ÷ ${divisor}`, answer: quotient };
+  } else if (op === '-') {
+    const n1 = r(100, max3), n2 = r(10, n1);
+    return { expr: `${n1} - ${n2}`, answer: n1 - n2 };
+  } else {
+    const n1 = r(100, max3), n2 = r(100, max3);
+    return { expr: `${n1} + ${n2}`, answer: n1 + n2 };
+  }
+}
+
+/* ════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════ */
+const SPEED_THRESH = 5;
+let difficulty     = null;
+let totalQuestions = 10;
+let timerDuration  = 20;
+let speedMult      = 2;
+let questions      = [];
+let currentQ       = 0;
+let score          = 0;
+let totalTime      = 0;
+let qStart         = 0;
+let timerTick      = null;
+let timeLeft       = 0;
+let answered       = false;
+let history        = [];
+let lives          = 3;
+let streak         = 0;
+let correctAnswer  = null;
+
+/* ════════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════════ */
+const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const t = document.getElementById(id);
+  void t.offsetWidth;
+  t.classList.add('active');
+}
+
+/* ════════════════════════════════════════════
+   QUESTION GENERATOR (classic)
+════════════════════════════════════════════ */
+function makeQuestion(diff) {
+  let n1, n2, ops;
+  if      (diff === 'very easy') { n1 = rand(1,5);   n2 = rand(1,5);   ops = ['+']; }
+  else if (diff === 'easy')      { n1 = rand(1,10);  n2 = rand(1,10);  ops = ['+','-']; }
+  else if (diff === 'medium')    { n1 = rand(2,20);  n2 = rand(2,12);  ops = ['+','-','*']; }
+  else if (diff === 'hard')      { n1 = rand(10,50); n2 = rand(2,12);  ops = ['+','-','*','/']; }
+  else                           { n1 = rand(20,99); n2 = rand(2,20);  ops = ['+','-','*','/']; }
+
+  const op = ops[rand(0, ops.length - 1)];
+  let ans;
+  if (op === '/') {
+    const mul = rand(1, diff === 'very hard' ? 12 : 9);
+    n1 = n2 * mul; ans = mul;
+  } else if (op === '*') { ans = n1 * n2; }
+  else if (op === '+')   { ans = n1 + n2; }
+  else { if (n2 > n1) [n1, n2] = [n2, n1]; ans = n1 - n2; }
+
+  const sym = op === '*' ? '×' : op === '/' ? '÷' : op;
+  return { expr: `${n1} ${sym} ${n2}`, answer: ans };
+}
+
+/* MCQ OPTIONS */
+function generateOptions(correct) {
+  const opts = new Set([correct]);
+  const spread = Math.max(3, Math.ceil(Math.abs(correct) * 0.4));
+  let attempts = 0;
+  while (opts.size < 4 && attempts < 50) {
+    attempts++;
+    let wrong;
+    const r = Math.random();
+    if (r < 0.5)       wrong = correct + rand(1, spread) * (Math.random() < 0.5 ? 1 : -1);
+    else if (r < 0.75) wrong = correct + (Math.random() < 0.5 ? 1 : -1);
+    else               wrong = correct * 2 - rand(1, spread);
+    if (wrong !== correct) opts.add(wrong);
+  }
+  let fallback = correct + 1;
+  while (opts.size < 4) { if (!opts.has(fallback)) opts.add(fallback); fallback++; }
+  const arr = [...opts];
+  for (let i = arr.length - 1; i > 0; i--) { const j = rand(0, i); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  return arr;
+}
+
+/* ════════════════════════════════════════════
+   SETTINGS (classic)
+════════════════════════════════════════════ */
+function selectQCount(el) {
+  document.querySelectorAll('[data-count]').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  totalQuestions = parseInt(el.dataset.count, 10);
+  document.getElementById('qcount-pill').textContent = `${totalQuestions} Questions`;
+  playSound('click');
+}
+function selectTimer(el) {
+  document.querySelectorAll('[data-secs]').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  timerDuration = parseInt(el.dataset.secs, 10);
+  document.getElementById('timer-pill').textContent = timerDuration === 0 ? 'No Timer' : `${timerDuration}s Timer`;
+  playSound('click');
+}
+function selectSpeed(el) {
+  document.querySelectorAll('[data-mult]').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  speedMult = parseFloat(el.dataset.mult);
+  document.getElementById('speed-pill').textContent = speedMult === 0 ? 'No Bonus' : `Speed ×${speedMult}`;
+  playSound('click');
+}
+function selectDiff(el) {
+  document.querySelectorAll('[data-diff]').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  difficulty = el.dataset.diff;
+  const L = { 'very easy':'🌱 Very Easy', easy:'😊 Easy', medium:'🔥 Medium', hard:'⚡ Hard', 'very hard':'💀 Very Hard' };
+  document.getElementById('diff-pill').textContent = L[difficulty];
+  document.getElementById('start-btn').disabled = false;
+  playSound('click');
+}
+
+/* ════════════════════════════════════════════
+   GAME FLOW — CLASSIC
+════════════════════════════════════════════ */
+function startGame() {
+  isJourneyMode  = false;
+  score = 0; currentQ = 0; totalTime = 0; history = []; lives = 3; streak = 0;
+  questions = Array.from({ length: totalQuestions }, () => makeQuestion(difficulty));
+  document.getElementById('q-total').textContent = totalQuestions;
+  document.getElementById('level-indicator').classList.remove('visible');
+  updateLives();
+  showScreen('screen-quiz');
+  avatarSay('Let\'s go! 🚀', false);
+  loadQuestion();
+}
+
+/* ════════════════════════════════════════════
+   GAME FLOW — JOURNEY
+════════════════════════════════════════════ */
+function startJourneyGame() {
+  isJourneyMode  = true;
+  timerDuration  = journeyTimer;
+  totalQuestions = journeyQCount;
+  speedMult      = 2;
+  score = 0; currentQ = 0; totalTime = 0; history = []; lives = 3; streak = 0;
+
+  questions = Array.from({ length: totalQuestions }, () => makeQuestionByLevel(journeyLevel));
+
+  const zone = getZone(journeyLevel);
+  document.getElementById('q-total').textContent = totalQuestions;
+  const ind = document.getElementById('level-indicator');
+  ind.classList.add('visible');
+  document.getElementById('level-indicator-text').textContent = `Level ${journeyLevel} • ${zone.name} ${zone.emoji}`;
+
+  updateLives();
+  showScreen('screen-quiz');
+  avatarSay(`Level ${journeyLevel}! Let's go! ${zone.emoji}`, true);
+  loadQuestion();
+}
+
+function loadQuestion() {
+  answered = false;
+  clearInterval(timerTick);
+  const q = questions[currentQ];
+  correctAnswer = q.answer;
+
+  document.getElementById('q-num').textContent          = currentQ + 1;
+  document.getElementById('live-score-val').textContent  = `${score} pts`;
+  document.getElementById('q-text').textContent          = q.expr;
+  document.getElementById('q-speak-hint').textContent    = '🔊 tap to hear';
+  document.getElementById('q-speak-hint').classList.remove('speaking');
+  updateProgress();
+  hideFeedback();
+
+  const opts = generateOptions(correctAnswer);
+  const btns = ['opt-a','opt-b','opt-c','opt-d'];
+  btns.forEach((id, i) => {
+    const btn = document.getElementById(id);
+    btn.textContent = opts[i];
+    btn.dataset.value = opts[i];
+    btn.disabled = false;
+    btn.className = `mcq-btn opt-${id.slice(-1)}`;
+  });
+
+  setTimeout(() => speakQuestion(), 100);
+  startTimer();
+}
+
+function advance() {
+  currentQ++;
+  if (currentQ < totalQuestions && lives > 0) loadQuestion();
+  else showResults();
+}
+
+/* ════════════════════════════════════════════
+   MCQ SELECTION
+════════════════════════════════════════════ */
+function selectOption(btn) {
+  if (answered) return;
+  clearInterval(timerTick);
+  answered = true;
+  playSound('click');
+
+  const userAns = parseInt(btn.dataset.value, 10);
+  const ok      = userAns === correctAnswer;
+  const elapsed = (performance.now() - qStart) / 1000;
+  totalTime += elapsed;
+  const q = questions[currentQ];
+  const speedCutoff = timerDuration > 0 ? timerDuration * 0.25 : SPEED_THRESH;
+  const fast = speedMult > 0 && ok && elapsed < speedCutoff;
+  const pts  = ok ? (fast ? speedMult : 1) : 0;
+  score += pts;
+
+  disableAllOptions();
+  revealCorrect();
+  if (!ok) btn.classList.add('wrong');
+
+  history.push({ expr: q.expr, correct: ok, answer: correctAnswer, userAns, time: elapsed, speedBonus: fast, timeout: false });
+
+  if (ok) {
+    streak++;
+    btn.classList.add('correct');
+    document.getElementById('live-score-val').textContent = `${score} pts`;
+    showFeedback('ok', fast ? `⚡ Speed bonus! +${speedMult} pts!` : `Correct! +1 point (${elapsed.toFixed(1)}s)`);
+    speakVerdict('Correct!');
+    playSound('correct');
+    updateCombo();
+    avatarSay(getPositiveMessage(), true);
+  } else {
+    streak = 0; lives--;
+    updateLives();
+    showFeedback('err', `Incorrect! The answer was ${correctAnswer}`);
+    speakVerdict('Incorrect.');
+    playSound('wrong');
+    avatarSay(getNegativeMessage(), false);
+    document.getElementById('combo-badge').classList.remove('show');
+    if (lives <= 0) { setTimeout(() => showResults(), 1200); return; }
+  }
+
+  setTimeout(advance, ok ? 1600 : 1800);
+}
+
+function disableAllOptions() {
+  ['opt-a','opt-b','opt-c','opt-d'].forEach(id => document.getElementById(id).disabled = true);
+}
+function revealCorrect() {
+  ['opt-a','opt-b','opt-c','opt-d'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (parseInt(btn.dataset.value, 10) === correctAnswer) btn.classList.add('correct');
+  });
+}
+
+/* ════════════════════════════════════════════
+   LIVES & COMBO
+════════════════════════════════════════════ */
+function updateLives() {
+  const hearts = '❤️'.repeat(Math.max(0, lives)) + '🖤'.repeat(Math.max(0, 3 - lives));
+  document.getElementById('lives-display').textContent = hearts;
+}
+function updateCombo() {
+  const badge = document.getElementById('combo-badge');
+  if (streak >= 3) {
+    badge.textContent = `🔥 ${streak}x Combo!`;
+    badge.classList.add('show');
+    setTimeout(() => badge.classList.remove('show'), 2000);
+  } else {
+    badge.classList.remove('show');
+  }
+}
+
+/* ════════════════════════════════════════════
+   TIMER
+════════════════════════════════════════════ */
+function startTimer() {
+  const row = document.getElementById('timer-row');
+  if (timerDuration === 0) { row.classList.add('hidden'); qStart = performance.now(); return; }
+  row.classList.remove('hidden');
+  timeLeft = timerDuration; qStart = performance.now();
+  renderTimer(timeLeft);
+  timerTick = setInterval(() => { timeLeft--; renderTimer(timeLeft); if (timeLeft <= 0) { clearInterval(timerTick); timeUp(); } }, 1000);
+}
+function renderTimer(s) {
+  const fill = document.getElementById('timer-fill');
+  const num  = document.getElementById('timer-num');
+  const pct  = Math.max(0, (s / timerDuration) * 100);
+  const warnAt   = Math.round(timerDuration * 0.4);
+  const dangerAt = Math.round(timerDuration * 0.25);
+  fill.style.width = `${pct}%`;
+  fill.className   = 'timer-fill' + (s <= dangerAt ? ' danger' : s <= warnAt ? ' warn' : '');
+  num.textContent  = Math.max(0, s);
+  num.className    = 'timer-num'  + (s <= dangerAt ? ' danger' : s <= warnAt ? ' warn' : '');
+}
+function timeUp() {
+  if (answered) return;
+  answered = true; streak = 0; lives--;
+  updateLives(); disableAllOptions(); revealCorrect();
+  const elapsed = (performance.now() - qStart) / 1000;
+  totalTime += elapsed;
+  const q = questions[currentQ];
+  history.push({ expr: q.expr, correct: false, answer: correctAnswer, userAns: null, time: elapsed, speedBonus: false, timeout: true });
+  showFeedback('err', `⏰ Time's up! Answer: ${correctAnswer}`);
+  speakVerdict("Time's up!"); playSound('wrong');
+  avatarSay('So close! Try again! ⏰', false);
+  document.getElementById('combo-badge').classList.remove('show');
+  if (lives <= 0) { setTimeout(() => showResults(), 1200); return; }
+  setTimeout(advance, 2000);
+}
+
+/* ════════════════════════════════════════════
+   FEEDBACK
+════════════════════════════════════════════ */
+function showFeedback(type, text) {
+  const el = document.getElementById('feedback');
+  document.getElementById('fb-icon').textContent = type === 'ok' ? '✅' : '❌';
+  document.getElementById('fb-text').textContent = text;
+  el.className = `feedback show ${type}`;
+}
+function hideFeedback() { document.getElementById('feedback').className = 'feedback'; }
+
+/* ════════════════════════════════════════════
+   PROGRESS + ROCKET
+════════════════════════════════════════════ */
+function updateProgress() {
+  const pct = (currentQ / totalQuestions) * 100;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+  document.getElementById('rocket').style.left = `calc(${pct}% - 11px)`;
+}
+
+/* ════════════════════════════════════════════
+   AVATAR
+════════════════════════════════════════════ */
+const AVATARS = { cyber: '🤖', jungle: '🦊', candy: '🐱' };
+function getAvatar() { return AVATARS[currentTheme] || '🤖'; }
+const positiveMessages = ['Awesome! 🌟', 'You\'re on fire! 🔥', 'Brilliant! 🎉', 'Keep it up! ⚡', 'Perfect! 💯', 'Superstar! ⭐'];
+const negativeMessages = ['Keep going! 💪', 'You\'ve got this! 🙌', 'Almost! Try again!', 'Don\'t give up! 🤗', 'Next one! 🚀'];
+function getPositiveMessage() { return positiveMessages[rand(0, positiveMessages.length - 1)]; }
+function getNegativeMessage() { return negativeMessages[rand(0, negativeMessages.length - 1)]; }
+function avatarSay(msg, positive) {
+  const av  = document.getElementById('avatar');
+  const bub = document.getElementById('speech-bubble');
+  av.textContent = getAvatar();
+  bub.textContent = msg;
+  bub.classList.add('show');
+  av.classList.remove('bounce', 'shake');
+  void av.offsetWidth;
+  av.classList.add(positive ? 'bounce' : 'shake');
+  clearTimeout(av._bubbleTimer);
+  av._bubbleTimer = setTimeout(() => bub.classList.remove('show'), 2500);
+}
+
+/* ════════════════════════════════════════════
+   RESULTS
+════════════════════════════════════════════ */
+function showResults() {
+  clearInterval(timerTick);
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  document.getElementById('progress-fill').style.width = '100%';
+  document.getElementById('rocket').style.left = 'calc(100% - 11px)';
+
+  const maxPts  = totalQuestions * (speedMult > 0 ? speedMult : 1);
+  const correct = history.filter(h => h.correct).length;
+  const ratio   = score / maxPts;
+  const avgTime = totalTime / totalQuestions;
+
+  const verdicts = [
+    '🌟 Outstanding! You\'re a math superstar!',
+    '👍 Great job! Really well done!',
+    '🙂 Good try! Keep practicing!',
+    '📚 Practice makes perfect! You\'ve got this!',
+  ];
+  let badge, vi;
+  if      (ratio >= 0.9) { badge = '🌟'; vi = 0; }
+  else if (ratio >= 0.7) { badge = '👍'; vi = 1; }
+  else if (ratio >= 0.5) { badge = '🙂'; vi = 2; }
+  else                   { badge = '📚'; vi = 3; }
+
+  document.getElementById('result-badge').textContent   = badge;
+  document.getElementById('result-score').textContent   = score;
+  document.getElementById('result-denom').textContent   = `out of ${maxPts} points`;
+  document.getElementById('result-verdict').textContent = verdicts[vi];
+  document.getElementById('stat-correct').textContent   = `${correct}/${totalQuestions}`;
+  document.getElementById('stat-time').textContent      = `${totalTime.toFixed(1)}s`;
+  document.getElementById('stat-avg').textContent       = `${avgTime.toFixed(1)}s`;
+
+  // Journey mode: level complete logic
+  const banner   = document.getElementById('level-complete-banner');
+  const nextBtn  = document.getElementById('next-level-btn');
+  const passRatio = correct / totalQuestions;
+
+  if (isJourneyMode) {
+    const zone    = getZone(journeyLevel);
+    const passed  = passRatio >= PASS_RATIO;
+    const perfect = passRatio === 1;
+    banner.classList.add('visible');
+
+    if (perfect) {
+      document.getElementById('lcb-title').textContent = `🏆 Perfect Score! Level ${journeyLevel} Mastered!`;
+      document.getElementById('lcb-sub').textContent   = `You aced every question! On to Level ${Math.min(journeyLevel + 1, 200)}!`;
+    } else if (passed) {
+      document.getElementById('lcb-title').textContent = `🎉 Level ${journeyLevel} Passed!`;
+      document.getElementById('lcb-sub').textContent   = `${correct}/${totalQuestions} correct — well done! Try the next level!`;
+    } else {
+      document.getElementById('lcb-title').textContent = `💪 Keep Trying! Level ${journeyLevel}`;
+      document.getElementById('lcb-sub').textContent   = `You need ${Math.ceil(totalQuestions * PASS_RATIO)} correct to pass. You got ${correct}!`;
+    }
+
+    nextBtn.style.display = (passed && journeyLevel < 200) ? 'block' : 'none';
+    if (passed && journeyLevel < 200) {
+      nextBtn.textContent = `NEXT LEVEL ${journeyLevel + 1} ➡️ ${getZone(journeyLevel + 1).emoji}`;
+    }
+  } else {
+    banner.classList.remove('visible');
+    nextBtn.style.display = 'none';
+  }
+
+  buildHistory();
+  showScreen('screen-results');
+  syncResultThemeBtns();
+
+  if (ratio >= 0.7) {
+    setTimeout(() => {
+      confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors: ['#f5c842','#22d4b8','#8b5cf6','#ff4f6e','#10e898'] });
+      if (ratio >= 0.9) {
+        setTimeout(() => confetti({ particleCount: 80, spread: 120, origin: { x: 0.1, y: 0.6 } }), 400);
+        setTimeout(() => confetti({ particleCount: 80, spread: 120, origin: { x: 0.9, y: 0.6 } }), 700);
+      }
+    }, 300);
+  }
+}
+
+/* ════════════════════════════════════════════
+   NEXT LEVEL
+════════════════════════════════════════════ */
+function goNextLevel() {
+  if (journeyLevel >= 200) return;
+  journeyLevel++;
+  updateLevelUI();
+  playSound('click');
+  startJourneyGame();
+}
+
+function buildHistory() {
+  const list = document.getElementById('history-list');
+  list.innerHTML = '';
+  history.forEach((h, i) => {
+    const row = document.createElement('div');
+    row.className = `h-item ${h.correct ? 'h-ok' : 'h-err'}`;
+    let ans;
+    if (h.correct)      ans = `= <span style="color:var(--green);font-weight:800">${h.answer}</span>`;
+    else if (h.timeout) ans = `= <span class="h-wrong">⏰</span> <span class="h-real">(${h.answer})</span>`;
+    else                ans = `= <span class="h-wrong">${h.userAns}</span> <span class="h-real">(${h.answer})</span>`;
+    const chip = h.speedBonus ? `<span class="speed-chip">⚡ FAST</span>` : '';
+    row.innerHTML = `
+      <div class="h-left"><span class="h-num">Q${i+1}</span><span class="h-expr">${h.expr} ${ans} ${chip}</span></div>
+      <div class="h-right"><span class="h-time">${h.time.toFixed(1)}s</span><span>${h.timeout ? '⏰' : h.correct ? '✅' : '❌'}</span></div>`;
+    list.appendChild(row);
+  });
+}
+
+function syncResultThemeBtns() {
+  document.querySelectorAll('#screen-results .theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === currentTheme));
+}
+
+/* ════════════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════════════ */
+function playAgain() {
+  playSound('click');
+  score = 0; currentQ = 0; totalTime = 0; history = []; lives = 3; streak = 0;
+  if (isJourneyMode) {
+    questions = Array.from({ length: totalQuestions }, () => makeQuestionByLevel(journeyLevel));
+    const zone = getZone(journeyLevel);
+    const ind  = document.getElementById('level-indicator');
+    ind.classList.add('visible');
+    document.getElementById('level-indicator-text').textContent = `Level ${journeyLevel} • ${zone.name} ${zone.emoji}`;
+  } else {
+    questions = Array.from({ length: totalQuestions }, () => makeQuestion(difficulty));
+    document.getElementById('level-indicator').classList.remove('visible');
+  }
+  document.getElementById('q-total').textContent = totalQuestions;
+  updateLives();
+  showScreen('screen-quiz');
+  avatarSay('Let\'s go again! 🎮', true);
+  loadQuestion();
+}
+
+function changeDiff() {
+  playSound('click');
+  clearInterval(timerTick);
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  document.getElementById('level-complete-banner').classList.remove('visible');
+  document.getElementById('next-level-btn').style.display = 'none';
+  showScreen('screen-welcome');
+}
+
+/* ════════════════════════════════════════════
+   SPEECH
+════════════════════════════════════════════ */
+const PREFERRED_VOICES = [
+  'Microsoft Aria Online (Natural)', 'Microsoft Jenny Online (Natural)',
+  'Google UK English Female', 'Samantha', 'Karen', 'Moira',
+  'Microsoft Aria', 'Microsoft Jenny', 'Google US English', 'Alex',
+];
+let _voice = null;
+function getBestVoice() {
+  if (_voice) return _voice;
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  for (const n of PREFERRED_VOICES) { const m = voices.find(v => v.name === n); if (m) { _voice = m; return _voice; } }
+  const eo = voices.find(v => v.lang.startsWith('en') && !v.localService);
+  if (eo) { _voice = eo; return _voice; }
+  const en = voices.find(v => v.lang.startsWith('en'));
+  if (en) { _voice = en; return _voice; }
+  return null;
+}
+if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = () => { _voice = null; };
+function makeUtterance(text) {
+  const utt = new SpeechSynthesisUtterance(text);
+  const v   = getBestVoice();
+  if (v) utt.voice = v;
+  utt.lang = 'en-US'; utt.rate = 0.82; utt.pitch = 1.20; utt.volume = 0.95;
+  return utt;
+}
+function buildSpokenQuestion(expr) {
+  return expr.replace(/×/g,' times ').replace(/÷/g,' divided by ').replace(/\+/g,' plus ').replace(/-/g,' minus ').replace(/\s+/g,' ').trim();
+}
+function speakQuestion() {
+  if (!window.speechSynthesis || !questions[currentQ]) return;
+  window.speechSynthesis.cancel();
+  const utt  = makeUtterance(buildSpokenQuestion(questions[currentQ].expr));
+  const qEl  = document.getElementById('q-text');
+  const hint = document.getElementById('q-speak-hint');
+  utt.onstart = () => { qEl.classList.add('speaking'); hint.classList.add('speaking'); hint.textContent = '🔊 speaking…'; };
+  utt.onend = utt.onerror = () => { qEl.classList.remove('speaking'); hint.classList.remove('speaking'); hint.textContent = '🔊 tap to hear'; };
+  window.speechSynthesis.speak(utt);
+}
+function speakVerdict(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utt = makeUtterance(text); utt.rate = 0.88; utt.pitch = 1.10;
+  window.speechSynthesis.speak(utt);
+}
+
+// Init level UI on load
+updateLevelUI();
+</script>
+</body>
+</html>
